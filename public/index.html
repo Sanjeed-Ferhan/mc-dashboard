@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MC OEE Production Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F14; --surface:#121A21; --surface2:#0E141A; --border:#1F2A34;
+    --text:#E8EEF4; --dim:#8FA1B0; --faint:#5E707F;
+    --accent:#FFC65C; --accent2:#3DDC97; --red:#FF6B7A; --blue:#5AC8FA;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 500px at 80% -10%,rgba(255,198,92,.06),transparent),var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+  header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 26px;border-bottom:1px solid var(--border);background:rgba(11,15,20,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#E8942A);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0B0F14;font-size:16px;box-shadow:0 0 22px rgba(255,198,92,.3)}
+  .brand h1{font-size:17px;margin:0;letter-spacing:.01em}
+  .brand .sub{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.09em;margin-top:2px}
+  .controls{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:10.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+  select,input[type=date]{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;outline:none}
+  select:focus,input:focus{border-color:var(--accent)}
+  .btn{background:linear-gradient(135deg,var(--accent),#E8942A);border:none;color:#0B0F14;font-weight:700;border-radius:8px;padding:8px 20px;font-size:13px;cursor:pointer;font-family:'Inter';transition:.15s}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,198,92,.25)}
+  .wrap{padding:18px 26px 40px}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--dim);display:flex;gap:6px;align-items:center}
+  .chip b{color:var(--accent)}
+  .export-btn{background:var(--surface);border:1px solid var(--border);color:var(--accent);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;font-family:'Inter';transition:.15s}
+  .export-btn:hover{border-color:var(--accent)}
+  .tbl-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:1800px}
+  thead th{position:sticky;top:0;background:#161F27;color:var(--dim);font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;padding:10px 10px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;z-index:5}
+  thead th.grp{text-align:center;background:#1B2530;color:var(--accent)}
+  thead th.lft, td.lft{text-align:left}
+  tbody td{padding:9px 10px;text-align:right;border-bottom:1px solid #162029;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tbody tr:hover{background:#18222C}
+  td.mc{font-weight:700;color:var(--text)}
+  td.sbu{font-weight:600;color:var(--accent)}
+  td.dim{color:var(--dim)}
+  .pos{color:var(--accent2)} .neg{color:var(--red)}
+  .subrow{color:var(--faint);font-size:11px}
+  .foot{padding:14px 4px;color:var(--faint);font-size:11.5px;line-height:1.7}
+  .loading{color:var(--dim);padding:40px;text-align:center;font-size:14px}
+  .formula-note{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:11.5px;color:var(--dim);line-height:1.8;margin-bottom:14px}
+  .formula-note code{color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="mark">MC</div>
+    <div>
+      <h1>MC OEE Production Summary Dashboard</h1>
+      <div class="sub">Live from DWH &middot; All SBUs</div>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="field"><label>Slicer: Year</label>
+      <select id="yr"><option value="">All Years</option></select>
+    </div>
+    <div class="field"><label>Slicer: Month</label>
+      <select id="mo"><option value="">All Months</option>
+        <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+        <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+      </select>
+    </div>
+    <div class="field"><label>From Date</label><input type="date" id="from"></div>
+    <div class="field"><label>To Date</label><input type="date" id="to"></div>
+    <div class="field"><label>Business Unit</label>
+      <select id="sbu"><option value="">All SBUs</option></select>
+    </div>
+    <button class="btn" id="view">View</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toolbar">
+    <div class="chips" id="chips"></div>
+    <button class="export-btn" id="export">Export CSV</button>
+  </div>
+  <div class="formula-note">
+    <b style="color:var(--text)">Metric formulas</b> &nbsp;
+    Capacity = &Sigma;(Cap/hr &times; ShiftDur/60) &nbsp;&middot;&nbsp; Target = &Sigma;(Cap/hr &times; AvailMin/60)
+    &nbsp;&middot;&nbsp; Availability = (AvailMin &minus; Unplanned) &divide; AvailMin &nbsp;&middot;&nbsp; Performance = Actual &divide; Target
+    &nbsp;&middot;&nbsp; Yield% = Good &divide; Actual &nbsp;&middot;&nbsp;
+    <code>Achieve% = Actual &divide; Target</code> &nbsp;<code>CapUtil% = Actual &divide; Capacity</code> &nbsp;
+    <code>Wastage% = (Actual&minus;Good) &divide; Actual</code> &nbsp;
+    <code>OEE% = Availability &times; Performance &times; Yield</code> &nbsp; NPT% = Unplanned &divide; AvailMin &nbsp;
+    MTBF = ActualRuntime(LoadMin) &divide; Mech+Elec BreakdownEvents &nbsp; MTTR = Mech+Elec BreakdownMin &divide; BreakdownEvents &nbsp; Speed = RPM (load-weighted avg)
+  </div>
+  <div class="tbl-wrap">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th colspan="4" class="grp lft" style="text-align:left">Identity</th>
+          <th colspan="5" class="grp">Production Plan</th>
+          <th colspan="4" class="grp">Quality &amp; Waste</th>
+          <th colspan="3" class="grp">Efficiency</th>
+          <th colspan="3" class="grp">Speed</th>
+          <th colspan="2" class="grp">Downtime</th>
+          <th colspan="2" class="grp">Reliability</th>
+        </tr>
+        <tr>
+          <th class="lft">SBU</th>
+          <th class="lft">MC</th>
+          <th class="lft">UOM</th>
+          <th class="lft">Plant / Shopfloor</th>
+          <th>Capacity</th>
+          <th>Target</th>
+          <th>Production</th>
+          <th>Achieve %</th>
+          <th>Capacity Utilization</th>
+          <th>Good Production</th>
+          <th>Yield %</th>
+          <th>Wastage TGT</th>
+          <th>Actual Wastage</th>
+          <th>Wastage %</th>
+          <th>OEE %</th>
+          <th>NPT %</th>
+          <th>TGT Speed</th>
+          <th>Actual Speed</th>
+          <th>Speed Gap</th>
+          <th>Planned DT (min)</th>
+          <th>Unplanned DT (min)</th>
+          <th>MTBF (min)</th>
+          <th>MTTR (min)</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"><tr><td colspan="23" class="loading">Loading data…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+const fmt = n => n==null||isNaN(n) ? '&ndash;' : Number(n).toLocaleString('en-US',{maximumFractionDigits: n<10&&n>-10?2:0});
+const pct = n => n==null||isNaN(n) ? '&ndash;' : (n*100).toFixed(2)+'%';
+let allMeta = null;
+
+async function loadMeta(){
+  try{
+    const r = await fetch('/api/meta'); const meta = await r.json();
+    if(meta.sbus){
+      const sbuSel = document.getElementById('sbu');
+      meta.sbus.forEach(s=>{ const o=document.createElement('option'); o.value=s.sbu; o.textContent=`${s.sbu}${s.bu_name?' — '+s.bu_name:''}`; sbuSel.appendChild(o); });
+    }
+    if(meta.years){
+      const yrSel = document.getElementById('yr');
+      meta.years.forEach(y=>{ const o=document.createElement('option'); o.value=y; o.textContent=y; yrSel.appendChild(o); });
+    }
+  }catch(e){ console.error(e); }
+}
+
+function rangeFor(){
+  const yr = document.getElementById('yr').value;
+  const mo = document.getElementById('mo').value;
+  let from = document.getElementById('from').value;
+  let to = document.getElementById('to').value;
+  // Year and/or month are the primary slicers; if set they drive the range.
+  if(mo){
+    const y = yr || new Date().getFullYear();
+    from = `${y}-${String(mo).padStart(2,'0')}-01`;
+    to = `${y}-${String(mo).padStart(2,'0')}-${String(new Date(y, Number(mo), 0).getDate()).padStart(2,'0')}`;
+    document.getElementById('from').value = from;
+    document.getElementById('to').value = to;
+  } else if(yr){
+    from = `${yr}-01-01`; to = `${yr}-12-31`;
+    document.getElementById('from').value = from;
+    document.getElementById('to').value = to;
+  }
+  return { from, to, sbu: document.getElementById('sbu').value };
+}
+
+async function loadData(){
+  const { from, to, sbu } = rangeFor();
+  const chips = document.getElementById('chips');
+  chips.innerHTML = `<span class="chip">Range <b>${from} → ${to}</b></span>` + (sbu?`<span class="chip">SBU <b>${sbu}</b></span>`:'<span class="chip">SBU <b>ALL</b></span>');
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '<tr><td colspan="23" class="loading">Loading…</td></tr>';
+  try{
+    const p = new URLSearchParams({from,to}); if(sbu) p.set('sbu',sbu);
+    const [oee, npt] = await Promise.all([
+      fetch('/api/oee?'+p).then(r=>r.json()),
+      fetch('/api/npt?'+p).then(r=>r.json())
+    ]);
+    if(oee.error || npt.error){ tbody.innerHTML = `<tr><td colspan="23">Error: ${oee.error||npt.error}</td></tr>`; return; }
+    render(oee, npt);
+  }catch(e){ tbody.innerHTML = `<tr><td colspan="23">Error loading: ${e.message}</td></tr>`; }
+}
+
+function render(oee, npt){
+  const nptMap = {}; const key = (x)=>`${x.sbu}|${x.mc}|${x.strPlantName}|${x.strShopFloorName}`;
+  npt.forEach(n=> nptMap[key(n)] = n);
+  const rows = oee.map(o=>{
+    const n = nptMap[key(o)];
+    const avail = +o.avail_min||0, load = +o.load_min||0;
+    const actual = +o.actual_qty||0, good = +o.good_qty||0;
+    const target = +o.target_qty||0, capFull = +o.capacity_full||0;
+    const unplanned = n ? (+n.unplanned_min||0) : (+o.npt_loss_min_hdr||0);
+    const achieve = target ? actual/target : null;                 // Actual/Target
+    const capUtil = capFull ? actual/capFull : null;               // Actual/Full-shift capacity
+    const perf = target ? actual/target : null;
+    const yieldF = actual ? good/actual : null;
+    const availF = avail ? Math.max(0,(avail-unplanned))/avail : null; // (Avail-Unplanned)/Avail
+    const oee_ = (availF!=null&&perf!=null&&yieldF!=null) ? availF*perf*yieldF : null;
+    const nptPct = avail ? unplanned/avail : null;
+    const wastage = actual - good;
+    const wastagePct = actual ? wastage/actual : null;
+    const stdRpm = (o.std_rpm_w&&load) ? o.std_rpm_w/load : null;
+    const actRpm = (o.act_rpm_w&&load) ? o.act_rpm_w/load : null;
+    const speedGap = (stdRpm!=null&&actRpm!=null)? stdRpm-actRpm : null;
+    const bd = n ? +n.breakdown_cnt||0 : 0;
+    const mttr = bd ? (+n.breakdown_min||0)/bd : null;
+    const mtbf = (bd && load) ? load/bd : null;   // Actual runtime (load min) / mech+elec breakdown events
+    return {o,n,availF,perf,yieldF,oee:oee_,nptPct,wastage,wastagePct,capUtil,achieve,
+      stdRpm,actRpm,speedGap,mtbf,mttr,unplanned};
+  });
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="23" class="loading">No data for the selected range.</td></tr>'; }
+  rows.forEach(r=>{
+    const o=r.o, tr=document.createElement('tr');
+    tr.innerHTML = `
+      <td class="lft sbu">${o.sbu||'—'}</td>
+      <td class="lft mc">${o.mc||'—'}</td>
+      <td class="lft dim">${o.uom||''}</td>
+      <td class="lft subrow">${o.strPlantName||''}${o.strShopFloorName?' · '+o.strShopFloorName:''}</td>
+      <td>${fmt(o.capacity_full)}</td>
+      <td>${fmt(o.target_qty)}</td>
+      <td>${fmt(o.actual_qty)}</td>
+      <td class="${r.achieve>=1?'pos':(r.achieve<0.5?'neg':'')}">${pct(r.achieve)}</td>
+      <td>${pct(r.capUtil)}</td>
+      <td>${fmt(o.good_qty)}</td>
+      <td class="${r.yieldF!=null&&r.yieldF>=0.98?'pos':(r.yieldF!=null?'neg':'')}">${pct(r.yieldF)}</td>
+      <td>${fmt(o.wastage_tgt)}</td>
+      <td class="${r.wastage>0?'neg':'pos'}">${fmt(r.wastage)}</td>
+      <td>${pct(r.wastagePct)}</td>
+      <td class="${r.oee!=null&&r.oee>=0.6?'pos':(r.oee!=null&&r.oee<0.3?'neg':'')}">${pct(r.oee)}</td>
+      <td class="${r.nptPct!=null&&r.nptPct>0.4?'neg':'pos'}">${pct(r.nptPct)}</td>
+      <td>${fmt(r.stdRpm)}</td>
+      <td>${fmt(r.actRpm)}</td>
+      <td class="${r.speedGap!=null&&r.speedGap>0?'neg':'pos'}">${fmt(r.speedGap)}</td>
+      <td>${fmt(o.planned_dt_min)}</td>
+      <td class="${r.unplanned>0?'neg':''}">${fmt(r.unplanned)}</td>
+      <td>${fmt(r.mtbf)}</td>
+      <td>${fmt(r.mttr)}</td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('foot').innerHTML = `${rows.length} machine rows &middot; ${new Date().toLocaleString()} &middot; Data: DWH.mes.tblOeeProdWasteHeaderArc / tblNPTRowArc (live)`;
+}
+
+function exportCSV(){
+  const tbl = document.getElementById('tbl');
+  const rows = [...tbl.querySelectorAll('tr')].filter(r=>r.querySelector('th'));
+  const header = [...tbl.querySelectorAll('thead th:not(.grp)')].map(th=>th.textContent.replace('\n','').trim());
+  const bodyRows = [...tbl.querySelectorAll('tbody tr')].filter(tr=>tr.cells.length>1 && !tr.textContent.includes('Loading') && !tr.textContent.includes('No data'));
+  const clean = s => `"${String(s).replace(/"/g,'""')}"`;
+  let csv = header.map(clean).join(',') + '\n';
+  bodyRows.forEach(tr=>{
+    const cells=[...tr.querySelectorAll('td')].map(td=>td.textContent.trim());
+    csv += cells.map(clean).join(',')+'\n';
+  });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`MC_OEE_${document.getElementById('from').value}_to_${document.getElementById('to').value}.csv`;
+  a.click();
+}
+
+function fmtDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+document.getElementById('view').addEventListener('click', loadData);
+document.getElementById('export').addEventListener('click', exportCSV);
+document.getElementById('yr').addEventListener('change', loadData);
+document.getElementById('mo').addEventListener('change', loadData);
+document.getElementById('sbu').addEventListener('change', loadData);
+document.getElementById('from').addEventListener('change', ()=>{ document.getElementById('yr').value=''; document.getElementById('mo').value=''; });
+document.getElementById('to').addEventListener('change', ()=>{ document.getElementById('yr').value=''; document.getElementById('mo').value=''; });
+loadMeta().then(()=>{
+  const now = new Date();
+  document.getElementById('to').value = fmtDate(now);
+  document.getElementById('from').value = fmtDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  loadData();
+});
+</script>
+</body>
+</html>
