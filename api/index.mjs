@@ -80,7 +80,7 @@ app.get("/api/oee", async (req, res) => {
         SUM(h.numNptLossTimeInMinutes) AS npt_loss_min_hdr,
         SUM(h.numShiftTargetQuantity) AS target_qty,
         SUM(h.numCapacityPerHr * h.numAvailableMinute / 60.0) AS capacity_qty,
-        SUM(h.numCapacityPerHr * 8.0) AS capacity_full,
+        SUM(h.numCapacityPerHr * h.numShiftDurationMinute / 60.0) AS capacity_full,
         SUM(h.numActualOutputQuantity) AS actual_qty,
         SUM(h.numGoodOutputQuantity) AS good_qty,
         SUM(h.numWastageTargetQuantity) AS wastage_tgt,
