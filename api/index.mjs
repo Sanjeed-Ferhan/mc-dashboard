@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, ".."); // project root (public/ lives here)
 
 const dbConfig = {
   server: process.env.MSSQL_SERVER || "203.202.241.211",
@@ -24,9 +25,9 @@ async function getPool() {
 
 const app = express();
 app.use(cors());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(ROOT, "public")));
 
-app.get("/", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.get("/", (_req, res) => res.sendFile(path.join(ROOT, "public", "index.html")));
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // meta: business units + available years
