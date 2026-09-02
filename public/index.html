@@ -99,7 +99,7 @@
     <table id="tbl">
       <thead>
         <tr>
-          <th colspan="4" class="grp lft" style="text-align:left">Identity</th>
+          <th colspan="3" class="grp lft" style="text-align:left">Identity</th>
           <th colspan="5" class="grp">Production Plan</th>
           <th colspan="4" class="grp">Quality &amp; Waste</th>
           <th colspan="3" class="grp">Efficiency</th>
@@ -111,7 +111,6 @@
           <th class="lft">SBU</th>
           <th class="lft">MC</th>
           <th class="lft">UOM</th>
-          <th class="lft">Plant / Shopfloor</th>
           <th>Capacity</th>
           <th>Target</th>
           <th>Production</th>
@@ -133,7 +132,7 @@
           <th>MTTR (min)</th>
         </tr>
       </thead>
-      <tbody id="tbody"><tr><td colspan="23" class="loading">Loading data…</td></tr></tbody>
+      <tbody id="tbody"><tr><td colspan="22" class="loading">Loading data…</td></tr></tbody>
     </table>
   </div>
   <div class="foot" id="foot"></div>
@@ -183,16 +182,16 @@ async function loadData(){
   const chips = document.getElementById('chips');
   chips.innerHTML = `<span class="chip">Range <b>${from} → ${to}</b></span>` + (sbu?`<span class="chip">SBU <b>${sbu}</b></span>`:'<span class="chip">SBU <b>ALL</b></span>');
   const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '<tr><td colspan="23" class="loading">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="22" class="loading">Loading…</td></tr>';
   try{
     const p = new URLSearchParams({from,to}); if(sbu) p.set('sbu',sbu);
     const [oee, npt] = await Promise.all([
       fetch('/api/oee?'+p).then(r=>r.json()),
       fetch('/api/npt?'+p).then(r=>r.json())
     ]);
-    if(oee.error || npt.error){ tbody.innerHTML = `<tr><td colspan="23">Error: ${oee.error||npt.error}</td></tr>`; return; }
+    if(oee.error || npt.error){ tbody.innerHTML = `<tr><td colspan="22">Error: ${oee.error||npt.error}</td></tr>`; return; }
     render(oee, npt);
-  }catch(e){ tbody.innerHTML = `<tr><td colspan="23">Error loading: ${e.message}</td></tr>`; }
+  }catch(e){ tbody.innerHTML = `<tr><td colspan="22">Error loading: ${e.message}</td></tr>`; }
 }
 
 function render(oee, npt){
@@ -225,14 +224,13 @@ function render(oee, npt){
 
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = '';
-  if(!rows.length){ tbody.innerHTML='<tr><td colspan="23" class="loading">No data for the selected range.</td></tr>'; }
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="22" class="loading">No data for the selected range.</td></tr>'; }
   rows.forEach(r=>{
     const o=r.o, tr=document.createElement('tr');
     tr.innerHTML = `
       <td class="lft sbu">${o.sbu||'—'}</td>
       <td class="lft mc">${o.mc||'—'}</td>
       <td class="lft dim">${o.uom||''}</td>
-      <td class="lft subrow">${o.strPlantName||''}${o.strShopFloorName?' · '+o.strShopFloorName:''}</td>
       <td>${fmt(o.capacity_full)}</td>
       <td>${fmt(o.target_qty)}</td>
       <td>${fmt(o.actual_qty)}</td>
