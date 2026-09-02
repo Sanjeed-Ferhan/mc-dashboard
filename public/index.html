@@ -139,7 +139,7 @@
 </div>
 
 <script>
-const fmt = n => n==null||isNaN(n) ? '&ndash;' : Number(n).toLocaleString('en-US',{maximumFractionDigits: n<10&&n>-10?2:0});
+const fmt = n => n==null||isNaN(n) ? '&ndash;' : Number(n).toLocaleString('en-US',{minimumFractionDigits:2, maximumFractionDigits:2});
 const pct = n => n==null||isNaN(n) ? '&ndash;' : (n*100).toFixed(2)+'%';
 const fmtH = n => n==null||isNaN(n) ? '&ndash;' : Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 let allMeta = null;
