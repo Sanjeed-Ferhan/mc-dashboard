@@ -93,7 +93,7 @@
     <code>Achieve% = Actual &divide; Target</code> &nbsp;<code>CapUtil% = Actual &divide; Capacity</code> &nbsp;
     <code>Wastage% = (Actual&minus;Good) &divide; Actual</code> &nbsp;
     <code>OEE% = Availability &times; Performance &times; Yield</code> &nbsp; NPT% = Unplanned &divide; AvailMin &nbsp;
-    MTBF = ActualRuntime(LoadMin) &divide; Mech+Elec BreakdownEvents &nbsp; MTTR = Mech+Elec BreakdownMin &divide; BreakdownEvents &nbsp; Speed = RPM (load-weighted avg)
+    MTBF (hrs) = ActualRuntime(LoadMin)&nbsp;&divide;&nbsp;60&nbsp;&divide;&nbsp;Mech+Elec BreakdownEvents &nbsp; MTTR (hrs) = Mech+Elec BreakdownMin&nbsp;&divide;&nbsp;60&nbsp;&divide;&nbsp;BreakdownEvents &nbsp; Speed = RPM (load-weighted avg)
   </div>
   <div class="tbl-wrap">
     <table id="tbl">
@@ -128,8 +128,8 @@
           <th>Speed Gap</th>
           <th>Planned DT (min)</th>
           <th>Unplanned DT (min)</th>
-          <th>MTBF (min)</th>
-          <th>MTTR (min)</th>
+          <th>MTBF (hrs)</th>
+          <th>MTTR (hrs)</th>
         </tr>
       </thead>
       <tbody id="tbody"><tr><td colspan="22" class="loading">Loading data…</td></tr></tbody>
@@ -141,6 +141,7 @@
 <script>
 const fmt = n => n==null||isNaN(n) ? '&ndash;' : Number(n).toLocaleString('en-US',{maximumFractionDigits: n<10&&n>-10?2:0});
 const pct = n => n==null||isNaN(n) ? '&ndash;' : (n*100).toFixed(2)+'%';
+const fmtH = n => n==null||isNaN(n) ? '&ndash;' : Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 let allMeta = null;
 
 async function loadMeta(){
@@ -216,8 +217,8 @@ function render(oee, npt){
     const actRpm = (o.act_rpm_w&&load) ? o.act_rpm_w/load : null;
     const speedGap = (stdRpm!=null&&actRpm!=null)? stdRpm-actRpm : null;
     const bd = n ? +n.breakdown_cnt||0 : 0;
-    const mttr = bd ? (+n.breakdown_min||0)/bd : null;
-    const mtbf = (bd && load) ? load/bd : null;   // Actual runtime (load min) / mech+elec breakdown events
+    const mttr = bd ? (+n.breakdown_min||0)/bd/60 : null;              // breakdown min / events / 60 -> hrs
+    const mtbf = (bd && load) ? load/bd/60 : null;                    // runtime (load min) / events / 60 -> hrs
     return {o,n,availF,perf,yieldF,oee:oee_,nptPct,wastage,wastagePct,capUtil,achieve,
       stdRpm,actRpm,speedGap,mtbf,mttr,unplanned};
   });
@@ -248,8 +249,8 @@ function render(oee, npt){
       <td class="${r.speedGap!=null&&r.speedGap>0?'neg':'pos'}">${fmt(r.speedGap)}</td>
       <td>${fmt(o.planned_dt_min)}</td>
       <td class="${r.unplanned>0?'neg':''}">${fmt(r.unplanned)}</td>
-      <td>${fmt(r.mtbf)}</td>
-      <td>${fmt(r.mttr)}</td>`;
+      <td>${fmtH(r.mtbf)}</td>
+      <td>${fmtH(r.mttr)}</td>`;
     tbody.appendChild(tr);
   });
   document.getElementById('foot').innerHTML = `${rows.length} machine rows &middot; ${new Date().toLocaleString()} &middot; Data: DWH.mes.tblOeeProdWasteHeaderArc / tblNPTRowArc (live)`;
