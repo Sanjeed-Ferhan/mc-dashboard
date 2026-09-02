@@ -239,7 +239,7 @@ function render(oee, npt){
       <td>${pct(r.capUtil)}</td>
       <td>${fmt(o.good_qty)}</td>
       <td class="${r.yieldF!=null&&r.yieldF>=0.98?'pos':(r.yieldF!=null?'neg':'')}">${pct(r.yieldF)}</td>
-      <td>${fmt(o.wastage_tgt)}</td>
+      <td>${fmt(o.wastage_tgt_calc)}</td>
       <td class="${r.wastage>0?'neg':'pos'}">${fmt(r.wastage)}</td>
       <td>${pct(r.wastagePct)}</td>
       <td class="${r.oee!=null&&r.oee>=0.6?'pos':(r.oee!=null&&r.oee<0.3?'neg':'')}">${pct(r.oee)}</td>

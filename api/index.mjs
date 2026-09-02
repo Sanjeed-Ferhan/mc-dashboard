@@ -77,6 +77,7 @@ app.get("/api/oee", async (req, res) => {
         SUM(h.numActualOutputQuantity) AS actual_qty,
         SUM(h.numGoodOutputQuantity) AS good_qty,
         SUM(h.numWastageTargetQuantity) AS wastage_tgt,
+        SUM(COALESCE(bh.numWastagePercentage,0) / 100.0 * h.numActualOutputQuantity) AS wastage_tgt_calc,
         SUM(h.numStandardRPM * h.numLoadingMinute) AS std_rpm_w,
         SUM(h.numActualRPM * h.numLoadingMinute) AS act_rpm_w,
         SUM(h.numActualOutputQuantity / NULLIF(h.numLoadingMinute,0) * 60.0) AS actual_speed_qty_hr,
@@ -85,6 +86,7 @@ app.get("/api/oee", async (req, res) => {
         SUM(h.numStandardRPM) AS std_rpm,
         SUM(h.numActualRPM) AS act_rpm
       FROM DWH.mes.tblOeeProdWasteHeaderArc h
+      LEFT JOIN DWH.mes.tblBillOfMaterialHeaderArc bh ON bh.intBillOfMaterialId = h.intBomId AND bh.isActive = 1
       LEFT JOIN DataMart.dbo.tblBusinessUnit bu ON bu.intBusinessUnitId = h.intBusinessUnitId
       WHERE ${where}
       GROUP BY bu.strBusinessUnitCode, bu.strBusinessUnitName, h.intBusinessUnitId,
